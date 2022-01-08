@@ -382,6 +382,7 @@ struct RadioMusic : Module {
 	bool pitchMode;
 	bool loopingEnabled;
 	bool crossfadeEnabled;
+	bool resetOnChannelSwitch;
 	bool sortFiles;
 	bool allowAllFiles;
 	std::string rootDir;
@@ -405,6 +406,10 @@ struct RadioMusic : Module {
 		// Option: Enable Crossfade
 		json_t *crossfadeJ = json_boolean(crossfadeEnabled);
 		json_object_set_new(rootJ, "crossfadeEnabled", crossfadeJ);
+
+		// Option: Reset on channel switch
+		json_t *resetchannelJ = json_boolean(resetOnChannelSwitch);
+		json_object_set_new(rootJ, "resetOnChannelSwitch", resetchannelJ);
 
 		// Option: Sort Files
 		json_t *sortJ = json_boolean(sortFiles);
@@ -441,6 +446,10 @@ struct RadioMusic : Module {
 		// Option: Enable Crossfade
 		json_t *crossfadeJ = json_object_get(rootJ, "crossfadeEnabled");
 		if (crossfadeJ) crossfadeEnabled = json_boolean_value(crossfadeJ);
+
+		// Option: Reset on channel switch
+		json_t *resetchannelJ = json_object_get(rootJ, "resetOnChannelSwitch");
+		if (resetchannelJ) resetOnChannelSwitch = json_boolean_value(resetchannelJ);
 
 		// Option: Sort Files
 		json_t *sortJ = json_object_get(rootJ, "sortFiles");
@@ -606,7 +615,8 @@ void RadioMusic::init() {
 	xfadeGain1 = 0.0f;
 	xfadeGain2 = 1.0f;
 	flashResetLed = false;
-
+	resetOnChannelSwitch = false;
+	
 	selectBank = false;
 	loadFiles = false;
 	scanFiles = false;
@@ -929,6 +939,7 @@ void RadioMusic::process(const ProcessArgs &args) {
 			} else {
 				currentPlayer->skipTo(0);
 			}
+			if (resetOnChannelSwitch) playTimer.reset();
 		}
 
 		xfadeGain1 = 0.0f;
@@ -1240,6 +1251,7 @@ struct RadioMusicWidget : ModuleWidget {
 		menu->addChild(createBoolPtrMenuItem("Pitch Mode enabled", "", &module->pitchMode));
 		menu->addChild(createBoolPtrMenuItem("Looping enabled", "", &module->loopingEnabled));
 		menu->addChild(createBoolPtrMenuItem("Crossfade enabled", "", &module->crossfadeEnabled));
+		menu->addChild(createBoolPtrMenuItem("Reset on channel switch", "", &module->resetOnChannelSwitch));
 		menu->addChild(createBoolPtrMenuItem("Files sorted", "", &module->sortFiles));
 		menu->addChild(createBoolPtrMenuItem("All files allowed", "", &module->allowAllFiles));
 	}
